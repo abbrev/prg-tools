@@ -1,25 +1,31 @@
+Commodore 64 BASIC/PRG tools
+============================
+
 This is a pair of quick-and-dirty programs I wrote originally in 2011 to
 convert between a PRG file and a BAS (text) file.
 
 Usage
-=====
+-----
 
 Convert a BAS file to a PRG file:
+
     bas2prg <program.bas >program.prg
 
 Convert a PRG file to a BAS file:
+
     prg2bas <program.prg >program.bas
 
 These programs do not take any arguments.
 
 How to build
-============
+------------
 
 Run the following command:
+
     make
 
 Layout of a BASIC PRG file
-==========================
+--------------------------
 
 * load address (2 bytes)
 * tokenized BASIC code (repeated for each line):
@@ -30,7 +36,7 @@ Layout of a BASIC PRG file
 * value 0000 (2 bytes) (end of PRG)
 
 Future directions
-=================
+-----------------
 
 These two programs have scratched my itch, so I don't plan to do anything else
 with them.
