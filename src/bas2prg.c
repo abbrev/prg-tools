@@ -73,9 +73,6 @@ tokenize(unsigned char *dest, const char *src)
     int token;
 	
     for (sp = src, dp = dest; *sp;) {
-	if (*src == '\r')
-		printf("CAUGHT!\n");
-
 	if (collapsespaces && !(rem || quoted)) {
 		while (*sp && isspace(*sp))
 			++sp;
