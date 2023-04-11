@@ -16,57 +16,84 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
 #include <stdio.h>
-
+#ifdef _WIN32
+# include <io.h>
+# include <fcntl.h>
+#endif
 #include "tokens.h"
+
 
 /*
  * Note: this tokenizer does not handle non-sequential PRG files. Lines must be
  * in the same order as they are found in the input.
  */
-
-long getword(FILE *f)
+static long
+getword(FILE *f)
 {
-	int n;
-	unsigned int x;
-	n = getc(f);
-	if (n < 0) return -1;
-	x = n;
-	n = getc(f);
-	if (n < 0) return -1;
-	return x | (n << 8);
+    unsigned int x;
+    int n;
+
+    n = getc(f);
+    if (n < 0)
+	return -1;
+    x = n;
+    n = getc(f);
+    if (n < 0)
+	return -1;
+
+    return x | (n << 8);
 }
 
-int main()
+
+int
+main()
 {
-	long addr, line;
-	int c;
-	int quoted;
-	
-	addr = getword(stdin); /* load addr */
-	fprintf(stderr, "Load address: 0x%04lx\n", addr);
+    long addr, line;
+    int quoted;
+    int c;
+
+#ifdef _WIN32
+    /* Avoid CR/LF translations in our (binary) input file. */
+    _setmode(_fileno(stdin), _O_BINARY);
+#endif
+
+    /* Get load address. */
+    addr = getword(stdin);
+    fprintf(stderr, "Load address: 0x%04lx\n", addr);
+
+    for (;;) {
+	/* Get next line address. */
+	addr = getword(stdin);
+	if (addr <= 0)
+		break;
+
+	/* Get line number. */
+	line = getword(stdin);
+	printf("%li ", line);
+
+	quoted = 0;
 	for (;;) {
-		addr = getword(stdin); /* next line addr */
-		if (addr <= 0) break;
-		line = getword(stdin); /* line number */
-		printf("%ld", line);
-		quoted = 0;
-		for (;;) {
-			c = getchar();
-			if (!c) break;
-			if (c < 0) goto end;
-			if (c == '"') quoted = !quoted;
-			if (!quoted && c >= 0x80) {
-				printf("%s", tokens[c-0x80]);
-				//printf("TOKEN{0x%02x}", c);
-			} else {
-				putchar(c);
-			}
-		}
-		putchar('\n');
-	}
-end:
-	return 0;
-}
+		c = getchar();
+		if (c == 0)
+			break;
 
+		if (c < 0)
+			goto end;
+
+		if (c == '"')
+			quoted = !quoted;
+
+		if (!quoted && c >= 0x80) {
+			printf("%s", tokens[c - 0x80]);
+//			printf("TOKEN{0x%02x}", c);
+		} else {
+			putchar(c);
+		}
+	}
+	putchar('\n');
+    }
+
+end:
+    return 0;
+}
