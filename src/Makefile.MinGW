@@ -1,0 +1,52 @@
+# Makefile for Windows systems using the MinGW-w64 environment.
+
+ARCH	=
+
+CC	= gcc
+LINK	= gcc
+RC	= windres
+
+CFLAGS	= $(ARCH) -Wall -O3 -Iwin32
+LDFLAGS	= $(ARCH) -s
+RCOPTS	= -O coff
+
+
+.SUFFIXES:	.rc .res
+
+
+.c.o:		$<
+		@echo Compiling $< ..
+		@$(CC) $(CFLAGS) -c $<
+
+.rc.res:	$<
+		@echo Processing $< ..
+		@$(RC) $(RCOPTS) -o $@ $<
+
+
+PROGS	= prg2bas.exe bas2prg.exe
+VPATH	= win32 .
+
+
+all:	$(PROGS)
+
+prg2bas.exe: prg2bas.o tokens.o prg2bas.res
+	@echo Linking $@ ..
+	@$(LINK) $(LFLAGS) -o $@ $< tokens.o prg2bas.res
+
+bas2prg.exe: bas2prg.o tokens.o bas2prg.res
+	@echo Linking $@ ..
+	@$(LINK) $(LFLAGS) -o $@ $< tokens.o bas2prg.res
+
+
+.PHONY: clean
+clean:
+	@-del *.o 2>NUL
+	@-del *.res 2>NUL
+
+
+.PHONY: clobber
+clobber: clean
+	@-del $(PROGS) 2>NUL
+
+
+# End of Makefile.

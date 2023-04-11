@@ -1,0 +1,35 @@
+# Makefile for UNIX/Linux systems using the GCC environment.
+
+ARCH	=
+
+CC	= gcc
+LINK	= gcc
+
+CFLAGS	= $(ARCH) -Wall -O3
+LDFLAGS	= $(ARCH) -s
+
+
+PROGS	= prg2bas bas2prg
+
+VPATH	= .
+
+
+all:	$(PROGS)
+
+prg2bas: prg2bas.o tokens.o
+
+bas2prg: bas2prg.o tokens.o
+
+
+.PHONY: clean
+clean:
+	@-rm -f *.o
+	@-rm -f *.res
+
+
+.PHONY: clobber
+clobber: clean
+	@-rm -f $(PROGS)
+
+
+# End of Makefile.

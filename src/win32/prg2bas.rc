@@ -1,0 +1,83 @@
+/*
+ * PRG2BAS	Convert C64 encoded BASIC files to readable source.
+ *
+ *		Application resource script for Windows.
+ *
+ * Version:	@(#)bas2prg.rc	1.0.1	2023/04/10
+ *
+ * Author:	Fred N. van Kempen, <waltje@varcem.com>
+ *
+ *		Copyright 2023 Fred N. van Kempen.
+ *
+ * MIT License 	Permission is hereby  granted, free  of charge, to  any person
+ *		obtaining a copy of this software and associated documentation
+ *		files  (the  "Software"), to  deal  in  the  Software  without
+ *		restriction, including without  limitation the  rights to use,
+ *		copy, modify,  merge, publish, distribute,  sublicense, and/or
+ *		sell copies of  the Software, and  to permit persons  to  whom
+ *		the Software is  furnished to do so, subject  to the following
+ *		condition:
+ *
+ *		The above copyright notice and this permission notice shall be
+ *		included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT  WARRANTY OF  ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS  OR  COPYRIGHT HOLDERS BE  LIABLE FOR  ANY CLAIM, DAMAGES  OR OTHER
+ * LIABILITY, WHETHER  IN  AN ACTION OF  CONTRACT, TORT  OR OTHERWISE, ARISING
+ * FROM, OUT OF  OR IN  CONNECTION  WITH THE  SOFTWARE  OR THE  USE  OR  OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
+#include <windows.h>
+#include "../version.h"
+
+
+100		ICON		"win32/cbm.ico"
+
+
+VS_VERSION_INFO VERSIONINFO
+#ifdef APP_VER_PATCH
+ FILEVERSION	APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_PATCH
+ PRODUCTVERSION	APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_PATCH
+#else
+ FILEVERSION	APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,0
+ PRODUCTVERSION	APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,0
+#endif
+ FILEFLAGSMASK	0x3fL
+#ifndef RELEASE_BUILD
+# ifdef _DEBUG
+ FILEFLAGS	VS_FF_SPECIALBUILD | VS_FF_DEBUG
+# else
+ FILEFLAGS	VS_FF_SPECIALBUILD
+# endif
+#else
+# ifdef _DEBUG
+ FILEFLAGS	VS_FF_DEBUG
+# else
+ FILEFLAGS	0x0L
+# endif
+#endif
+ FILEOS		VOS_NT_WINDOWS32
+ FILETYPE	VFT_APP
+ FILESUBTYPE	0x0L
+ BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "0409fde9"
+        BEGIN
+            VALUE "CompanyName", "The VARCem Group LLC"
+            VALUE "LegalCopyright", "See LICENSE for legal information."
+            VALUE "ProductName", "VARCem Support Tools"
+            VALUE "ProductVersion", APP_VERSION
+            VALUE "InternalName", APP_NAME
+            VALUE "FileDescription", APP_NAME
+            VALUE "FileVersion", APP_VERSION
+            VALUE "OriginalFilename", "prg2bas.exe"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 65001
+    END
+END
