@@ -1,0 +1,48 @@
+# Makefile for Windows systems using Microsoft Visual Studio.
+
+CC	= cl /nologo
+LINK	= link /nologo
+RC	= rc /nologo
+
+CFLAGS	= -O1 -Iwin32
+LDFLAGS	= /SUBSYSTEM:console /DEBUG:NONE
+RCOPTS	= /r
+
+
+.SUFFIXES:	.c .obj .rc .res .exe
+
+
+.c.obj:		$<
+		@$(CC) $(CFLAGS) -c $<
+
+.rc.res:	$<
+		@echo $<
+		@$(RC) $(RCOPTS) /fo$@ $<
+
+
+VPATH	= win32 .
+
+
+all:	prg2bas.exe bas2prg.exe
+
+prg2bas.exe: prg2bas.obj tokens.obj getopt.obj prg2bas.res
+	@echo Linking $@
+	@$(LINK) /OUT:$@ $(LDFLAGS) prg2bas tokens getopt prg2bas.res
+
+bas2prg.exe: bas2prg.obj tokens.obj getopt.obj bas2prg.res
+	@echo Linking $@
+	@$(LINK) /OUT:$@ $(LDFLAGS) bas2prg tokens getopt bas2prg.res
+
+
+.PHONY: clean
+clean:
+	@-del *.obj
+	@-del *.res
+
+
+.PHONY: clobber
+clobber: clean
+	@-del *.exe
+
+
+# End of Makefile.
