@@ -2,10 +2,13 @@
 
 ARCH	=
 
+DEFS	= -DUSE_EXTEND
+
+
 CC	= gcc
 LINK	= gcc
 
-CFLAGS	= $(ARCH) -Wall -O3
+CFLAGS	= $(ARCH) -Wall -O3 $(DEFS)
 LDFLAGS	= $(ARCH) -s
 
 

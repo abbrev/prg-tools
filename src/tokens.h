@@ -20,7 +20,23 @@
 # define _TOKENS_H_
 
 
-extern const char *tokens[128];
+#define TOKEN_BASE	0x80
+# define TOKEN_REM	0x8f
+
+#define PREFIX_1	0xce		// prefix for V3.5 and V7.0
+#define PREFIX_2	0xfe		// prefix for V7.0 and V7.1
+
+
+extern const char	*tokens[];
+extern int		tokens_size;
+
+#ifdef USE_EXTEND
+extern const char	*tokens_ce[];
+extern int		tokens_ce_size;
+
+extern const char	*tokens_fe[];
+extern int		tokens_fe_size;
+#endif
 
 
 #endif	/*_TOKENS_H*/

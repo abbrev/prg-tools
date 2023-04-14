@@ -1,6 +1,8 @@
 /*
- * bas2prg.c, convert a C64 BASIC text file to a PRG file.
+ * bas2prg.c, convert a C64/128 BASIC text file to a PRG file.
+ *
  * Copyright 2011, 2012 Christopher Williams
+ * Copyright 2023 Fred N. van Kempen, <waltje@varcem.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,17 +32,39 @@
 
 
 #define MAXLINELEN	1024
-#define TOKEN_REM	0x8f
 
 
-#ifdef _DEBUG
-	debug = 0;		// debug level
-#endif
-int	invertcase,		// rough ASCII to PETSCII conversion
+int	debug,			// debug level
+	verbose,		// output noise level
+	invertcase,		// rough ASCII to PETSCII conversion
 	autonumber,		// add line numbers if no line number found
 	startaddr,		// load address
 	trimspaces,		// remove spaces from beginning/end of line
 	collapsespaces;		// remove free spaces inside line
+
+
+/* Read a hex string, similar to strtoul. Hex digits are in uppercase. */
+static unsigned long
+hexstrtoul(const char *str, char **endptr)
+{
+    unsigned long num = 0;
+
+    while (*str != '\0') {
+	if (*str >= '0' && *str <= '9') {
+		num <<= 4;
+		num += *str++ - '0';
+	} else if (*str >= 'A' && *str <= 'F') {
+		num <<= 4;
+		num += (*str++ - 'A') + 10;
+	} else
+		break;
+    }
+
+    if (endptr != NULL)
+	*endptr = (char *)str;
+
+    return num;
+}
 
 
 /*
@@ -48,22 +72,21 @@ int	invertcase,		// rough ASCII to PETSCII conversion
  * return -1 if no token is found
  */
 static int
-gettoken(const char **src)
+gettoken(const char **src, const char **table, int table_size)
 {
     const char **tp;
     int len;
-    int t;
-	
-    for (tp = tokens; tp < &tokens[128]; ++tp) {
+
+    for (tp = tokens; tp < table + table_size; tp++) {
 	len = strlen(*tp);
 	if (! strncmp(*tp, *src, len)) {
 #ifdef _DEBUG
 		if (debug)
 			fprintf(stderr, "found token: %s\n", *tp);
 #endif
-		t = tp-tokens + 128;
 		*src += len;
-		return t;
+
+		return tp-tokens;
 	}
     }
 
@@ -80,23 +103,72 @@ tokenize(unsigned char *dest, const char *src)
     int rem = 0;
     int token;
 	
-    for (sp = src, dp = dest; *sp;) {
+    for (sp = src, dp = dest; *sp != '\0'; ) {
 	if (collapsespaces && !(rem || quoted)) {
 		while (*sp && isspace(*sp))
-			++sp;
+			sp++;
 	}
 
 	if (*sp == '"')
 		quoted = !quoted;
 	
 	if (!rem && !quoted) {
-		token = gettoken(&sp);
+		/* Try the standard tokens. */
+		token = gettoken(&sp, tokens, tokens_size);
 		if (token != -1) {
+			token += TOKEN_BASE;
+
 			if (token == TOKEN_REM)
 				rem = 1;
+
 			*dp++ = (unsigned char)token;
 			continue;
 		}
+
+#ifdef USE_EXTEND
+		/* Try the extended CE-prefixed tokens. */
+		token = gettoken(&sp, tokens_ce, tokens_ce_size);
+		if (token != -1) {
+			*dp++ = (unsigned char)PREFIX_1;
+			*dp++ = (unsigned char)token;
+			continue;
+		}
+
+		/* Try the extended FE-prefixed tokens. */
+		token = gettoken(&sp, tokens_fe, tokens_fe_size);
+		if (token != -1) {
+			*dp++ = (unsigned char)PREFIX_2;
+			*dp++ = (unsigned char)token;
+			continue;
+		}
+#endif
+	}
+
+	if ((*sp == '{') && (*(sp+3) == '}')) {
+		/*
+		 * Escaped non-printable character.
+		 *
+		 * For now, we escape such characters simply by
+		 * converting them to a hexadecimal number, and
+		 * then enclose them between { and } characters.
+		 *
+		 * This works fine, but maybe we should use the
+		 * naming as mentioned in
+		 *
+		 * https://www.c64-wiki.com/wiki/PETSCII_Codes_in_Listings
+		 *
+		 * or such?
+		 */
+		token = (int)hexstrtoul(sp+1, (char **)&sp);
+		if (*sp != '}') {
+			fprintf(stderr, "Invalid format in escape!\n");
+			return 0;
+		}
+		sp++;
+
+		*dp++ = (unsigned char)token;
+
+		continue;
 	}
 
 #ifdef _DEBUG
@@ -105,7 +177,7 @@ tokenize(unsigned char *dest, const char *src)
 			*sp, *sp, rem?" (rem)":"", quoted?" (quoted)":"");
 #endif
 
-	if (*src != '\r')
+	if (*sp != '\r')
 		*dp++ = (unsigned char)*sp++;
     }
 
@@ -116,8 +188,8 @@ tokenize(unsigned char *dest, const char *src)
 
     *dp++ = 0;
 #ifdef _DEBUG
-	if (debug)
-		fprintf(stderr, "\n");
+    if (debug)
+	fprintf(stderr, "\n");
 #endif
 
     return dp - dest;
@@ -138,28 +210,26 @@ main(int argc, char **argv)
     unsigned char tokline[MAXLINELEN];	// tokenized line
     unsigned char *tp;			// pointer in tokenized line
     char line[MAXLINELEN];		// source line
-    char *cp;
+    char *cp, *ep;
     long linenum;
     int lastlinenum = -1;
     int toklinelen;
-    int c;
     FILE *fi, *fo;
     char *out_name;
+    int c;
 
     /* Set defaults. */
     autonumber = 0;
     collapsespaces = 0;
-#ifdef _DEBUG
-    debug = 0;
-#endif
+    debug = verbose = 0;
     invertcase = 0;
-    startaddr = 0x0801;
+    startaddr = 0x0801;		// $1C01 for C128/BASICv7
     trimspaces = 0;
     out_name = NULL;
 
     /* Process commandline arguments. */
     opterr = 0;
-    while ((c = getopt(argc, argv, "acdio:s:t")) != EOF) switch (c) {
+    while ((c = getopt(argc, argv, "acdio:s:tv")) != EOF) switch (c) {
 	case 'a':	// auto-number
 		autonumber ^= 1;
 		break;
@@ -169,11 +239,7 @@ main(int argc, char **argv)
 		break;
 
 	case 'd':	// debug-level
-#ifdef _DEBUG
 		debug++;
-#else
-		fprintf(stderr, "Debugging not compiled in.\n");
-#endif
 		break;
 
 	case 'i':	// invert-case
@@ -185,19 +251,26 @@ main(int argc, char **argv)
 		break;
 
 	case 's':	// start-address
-		(void)sscanf(optarg, "0x%x", &startaddr);
-		(void)sscanf(optarg, "$%x", &startaddr);
-		(void)sscanf(optarg, "$%X", &startaddr);
+		if (*optarg == '0' && *(optarg+1) == 'x')
+			optarg += 2;
+		else if (*optarg == '$')
+			optarg++;
+		startaddr = hexstrtoul(optarg, NULL);
+		printf("Start address is $%04X\n", startaddr);
 		break;
 
 	case 't':	// trim-spaces
 		trimspaces ^= 1;
 		break;
 
+	case 'v':	// output noise level
+		verbose++;
+		break;
+
 	default:
 usage:
 		fprintf(stderr,
-			"Usage: bas2prg [-acdit] [-s addr] [-o outfile] filename\n");
+			"Usage: bas2prg [-acditv] [-s addr] [-o outfile] filename\n");
 		exit(1);
     }
 
@@ -236,8 +309,10 @@ usage:
     if (optind != argc)
 	goto usage;
 
-    /* load address */
-    fprintf(stderr, "Load address: $%04X\n", startaddr);
+    /* Show the load address. */
+    if (verbose)
+	fprintf(stderr, "Load address: $%04X\n", startaddr);
+
     tp = tokline;
     putword(startaddr, &tp);
     fwrite(tokline, 1, 2, fo);
@@ -245,22 +320,25 @@ usage:
     for (;;) {
 	if (! fgets(line, MAXLINELEN, fi))
 		break;
-		
-	/* trim off the newline */
+
+	/* Trim off the newline. */
 	cp = &line[strlen(line)-1];
 	if (*cp == '\n')
+		*cp = '\0';
+	cp = &line[strlen(line)-1];
+	if (*cp == '\r')
 		*cp = '\0';
 		
 	if (invertcase) {
 		for (cp = line; *cp; ++cp) {
-			int c = *cp;
+			c = *cp;
 			if (isupper(c))
 				*cp = tolower(c);
 			else if (islower(c))
 				*cp = toupper(c);
 		}
 	}
-		
+
 	linenum = strtol(line, &cp, 10);
 
 	/*
@@ -292,24 +370,28 @@ usage:
 
 	lastlinenum = linenum;
 
-	/* trim extraneous whitespace at the beginning and end */
+	/* Trim extraneous whitespace at the beginning and end. */
 	if (trimspaces) {
-		char *ep = &line[strlen(line)-1];
+		ep = &line[strlen(line)-1];
+
 		while (ep >= line && isspace(*ep))
-			--ep;
+			ep--;
 		ep[1] = '\0';
 		while (*cp && isspace(*cp))
-			++cp;
+			cp++;
 	}
-		
+
 	tp = &tokline[2]; /* skip first word for now */
 	putword(linenum, &tp);
-		
+
 	toklinelen = tokenize(tp, cp);
 #ifdef _DEBUG
 	if (debug)
 		fprintf(stderr, "line length: %i\n", toklinelen);
 #endif
+	if (toklinelen == 0)
+		break;
+
 	startaddr += toklinelen + 4;
 	tp = tokline;
 	putword(startaddr, &tp);
@@ -319,6 +401,8 @@ usage:
     tp = tokline;
     putword(0, &tp);
     fwrite(tokline, 1, 2, fo);
+
+    fflush(stdout);
 
     if (fo != stdout)
 	fclose(fo);

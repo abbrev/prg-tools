@@ -1,10 +1,13 @@
 # Makefile for Windows systems using Microsoft Visual Studio.
 
+DEFS	= -DUSE_EXTEND
+
+
 CC	= cl /nologo
 LINK	= link /nologo
 RC	= rc /nologo
 
-CFLAGS	= -O1 -Iwin32
+CFLAGS	= -O1 -Iwin32 $(DEFS)
 LDFLAGS	= /SUBSYSTEM:console /DEBUG:NONE
 RCOPTS	= /r
 
@@ -25,13 +28,13 @@ VPATH	= win32 .
 
 all:	prg2bas.exe bas2prg.exe
 
-prg2bas.exe: prg2bas.obj tokens.obj getopt.obj prg2bas.res
+prg2bas.exe: prg2bas.res prg2bas.obj tokens.obj getopt.obj
 	@echo Linking $@
-	@$(LINK) /OUT:$@ $(LDFLAGS) prg2bas tokens getopt prg2bas.res
+	@$(LINK) /OUT:$@ $(LDFLAGS) prg2bas.res prg2bas tokens getopt
 
-bas2prg.exe: bas2prg.obj tokens.obj getopt.obj bas2prg.res
+bas2prg.exe: bas2prg.res bas2prg.obj tokens.obj getopt.obj
 	@echo Linking $@
-	@$(LINK) /OUT:$@ $(LDFLAGS) bas2prg tokens getopt bas2prg.res
+	@$(LINK) /OUT:$@ $(LDFLAGS) bas2prg.res bas2prg tokens getopt
 
 
 .PHONY: clean
