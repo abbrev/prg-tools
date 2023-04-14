@@ -14,13 +14,17 @@ Usage
 Convert a BAS file to a PRG file:
 
     bas2prg <program.bas >program.prg
+
 or
+
     bas2prg -o program.prg program.bas
 
 Convert a PRG file to a BAS file:
 
     prg2bas <program.prg >program.bas
+
 or
+
     prg2bas -o program.bas program.prg
 
 whichever format feels better.
@@ -29,7 +33,9 @@ Each program takes its own commandline options; you can see these by calling
 them with the -? argument:
 
     prg2bas -?
+
 or
+
     bas2prg -?
 
 
@@ -39,9 +45,13 @@ How to build
 Run the following command:
 
     make -f unix/Makefile.GCC
+
 or
+
     make -f win32/Makefile.MinGW
+
 or
+
     make -f win32/Makefile.VC
 
 depending on your operating system and development tools.
