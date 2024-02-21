@@ -2,11 +2,14 @@
 
 ARCH	=
 
+DEFS	= -DUSE_EXTEND
+
+
 CC	= gcc
 LINK	= gcc
 RC	= windres
 
-CFLAGS	= $(ARCH) -Wall -O3 -Iwin32
+CFLAGS	= $(ARCH) -Wall -O3 -Iwin32 $(DEFS)
 LDFLAGS	= $(ARCH) -s
 RCOPTS	= -O coff
 
@@ -31,11 +34,11 @@ all:	$(PROGS)
 
 prg2bas.exe: prg2bas.o tokens.o prg2bas.res
 	@echo Linking $@ ..
-	@$(LINK) $(LFLAGS) -o $@ $< tokens.o prg2bas.res
+	@$(LINK) $(LDFLAGS) -o $@ $< tokens.o prg2bas.res
 
 bas2prg.exe: bas2prg.o tokens.o bas2prg.res
 	@echo Linking $@ ..
-	@$(LINK) $(LFLAGS) -o $@ $< tokens.o bas2prg.res
+	@$(LINK) $(LDFLAGS) -o $@ $< tokens.o bas2prg.res
 
 
 .PHONY: clean

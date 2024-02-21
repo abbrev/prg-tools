@@ -19,7 +19,9 @@
 #include "tokens.h"
 
 
-const char *tokens[128] = {
+/* Standard CBM tokens, for all versions of BASIC. */
+const char *tokens[] = {
+    // Standard, block $80
     "END",		// 80
     "FOR",		// 81
     "NEXT",		// 82
@@ -29,6 +31,7 @@ const char *tokens[128] = {
     "DIM",		// 86
     "READ",		// 87
 
+    // Standard, block $88
     "LET",		// 88
     "GOTO",		// 89
     "RUN",		// 8a
@@ -38,6 +41,7 @@ const char *tokens[128] = {
     "RETURN",		// 8e
     "REM",		// 8f
 
+    // Standard, block $90
     "STOP",		// 90
     "ON",		// 91
     "WAIT",		// 92
@@ -47,6 +51,7 @@ const char *tokens[128] = {
     "DEF",		// 96
     "POKE",		// 97
 
+    // Standard, block $98
     "PRINT#",		// 98
     "PRINT",		// 99
     "CONT",		// 9a
@@ -56,6 +61,7 @@ const char *tokens[128] = {
     "SYS",		// 9e
     "OPEN",		// 9f
 
+    // Standard, block $A0
     "CLOSE",		// a0
     "GET",		// a1
     "NEW",		// a2
@@ -65,6 +71,7 @@ const char *tokens[128] = {
     "SPC(",		// a6
     "THEN",		// a7
 
+    // Standard, block $A8
     "NOT",		// a8
     "STEP",		// a9
     "+",		// aa
@@ -74,6 +81,7 @@ const char *tokens[128] = {
     "^",		// ae
     "AND",		// af
 
+    // Standard, block $B0
     "OR",		// b0
     ">",		// b1
     "=",		// b2
@@ -83,6 +91,7 @@ const char *tokens[128] = {
     "ABS",		// b6
     "USR",		// b7
 
+    // Standard, block $B8
     "FRE",		// b8
     "POS",		// b9
     "SQR",		// ba
@@ -92,6 +101,7 @@ const char *tokens[128] = {
     "COS",		// be
     "SIN",		// bf
 
+    // Standard, block $C0
     "TAN",		// c0
     "ATN",		// c1
     "PEEK",		// c2
@@ -101,66 +111,162 @@ const char *tokens[128] = {
     "ASC",		// c6
     "CHR$",		// c7
 
+    // Standard, block $C8
     "LEFT$",		// c8
     "RIGHT$",		// c9
     "MID$",		// ca
     "GO",		// cb
-    "{cc}",
-    "{cd}",
-    "{ce}",
-    "{cf}",
-	
-    "{d0}",
-    "{d1}",
-    "{d2}",
-    "{d3}",
-    "{d4}",
-    "{d5}",
-    "{d6}",
-    "{d7}",
-	
-    "{d8}",
-    "{d9}",
-    "{da}",
-    "{db}",
-    "{dc}",
-    "{dd}",
-    "{de}",
-    "{df}",
-	
-    "{e0}",
-    "{e1}",
-    "{e2}",
-    "{e3}",
-    "{e4}",
-    "{e5}",
-    "{e6}",
-    "{e7}",
-	
-    "{e8}",
-    "{e9}",
-    "{ea}",
-    "{eb}",
-    "{ec}",
-    "{ed}",
-    "{ee}",
-    "{ef}",
-	
-    "{f0}",
-    "{f1}",
-    "{f2}",
-    "{f3}",
-    "{f4}",
-    "{f5}",
-    "{f6}",
-    "{f7}",
-	
-    "{f8}",
-    "{f9}",
-    "{fa}",
-    "{fb}",
-    "{fc}",
-    "{fd}",
-    "{fe}",
-    "{pi}"		// ff
+
+#ifdef USE_EXTEND
+    // Extended, for V3.5 and V7.0
+    "RGR",		// V3.5/7.0
+    "RCLR",		// V3.5/7.0
+    "RLNUM",		// V3.5; prefix CE for V7.0
+    "JOY",		// V3.5/7.0
+
+    // Extended, for V3.5 and V7.0
+    "RDOT",
+    "DEC",
+    "HEX$",
+    "ERR$",
+    "INSTR",
+    "ELSE",
+    "RESUME",
+    "TRAP",
+
+    // Extended, for V3.5 and V7.0
+    "TRON",
+    "TROFF",
+    "SOUND",
+    "VOL",
+    "AUTO",
+    "PUDEF",
+    "GRAPHIC",
+    "PAINT",
+
+    // Extended, for V3.5 and V7.0
+    "CHAR",
+    "BOX",
+    "CIRCLE",
+    "GSHAPE",
+    "SSHAPE",
+    "DRAW",
+    "LOCATE",
+    "COLOR",
+
+    // Extended, for V3.5 and V7.0
+    "SCNCLR",
+    "SCALE",
+    "HELP",
+    "DO",
+    "LOOP",
+    "EXIT",
+    "DIRECTORY",
+    "DSAVE",
+
+    // Extended, for V3.5 and V7.0
+    "DLOAD",
+    "HEADER",
+    "SCRATCH",
+    "COLLECT",
+    "COPY",
+    "RENAME",
+    "BACKUP",
+    "DELETE",
+
+    // Extended, for V3.5 and V7.0
+    "RENUMBER",
+    "xKEY",
+    "MONITOR",
+    "USING",
+    "UNTIL",
+    "WHILE",
+    "{fe}",		// prefix FE for V7.0
+    "{pi}"
+#endif
 };
+
+#ifdef USE_EXTEND
+// Extended keywords, for V3.5 and V7.0, using the $CE prefix.
+const char *tokens_ce[] = {
+    "{00}",
+    "{01}",
+    "POT",
+    "BUMP",
+    "PEN",
+    "RSPPOS",
+    "RSPRITE",
+    "RSPCOLOR",
+    "XOR",
+    "RWINDOW",
+    "POINTER"
+};
+
+// Extended keywords, for V7.0, using the $FE prefix.
+const char *tokens_fe[] = {
+    "${00}",
+    "${01}",
+    "BANK",
+    "FILTER",
+    "PLAY",
+    "TEMPO",
+    "MOVSPR",
+    "SPRITE",
+    "SPRCOLOR",
+    "RREG",
+    "ENVELOPE",
+    "SLEEP",
+    "CATALOG",
+    "DOPEN",
+    "APPEND",
+    "DCLOSE",
+    "BSAVE",
+    "BLOAD",
+    "RECORD",
+    "CONCAT",
+    "DVERIFY",
+    "DCLEAR",
+    "SPRSAV",
+    "COLLISION",
+    "BEGIN",
+    "BEND",
+    "WINDOW",
+    "BOOT",
+    "WIDTH",
+    "SPRDEF",
+    "QUIT",
+    "STASH",
+    "{20}",
+    "FETCH",
+    "{22}",
+    "SWAP",
+    "OFF",
+    "FAST",
+    "SLOW"
+
+    /* Extensions for V7.1. */
+    "CWIND",
+    "SSCRN",
+    "LSCRN",
+    "HIDE",
+    "SHOW",
+    "SFONT",
+    "LFONT",
+    "VIEW",
+    "FCOPY",
+    "ESAVE",
+    "SEND",
+    "CHECK",
+    "ESC",
+    "OLD",
+    "FIND",
+    "DUMP",
+    "MERGE"
+};
+#endif
+
+int	tokens_size = sizeof(tokens) / sizeof(const char *);
+#ifdef USE_EXTEND
+int	tokens_ce_size = sizeof(tokens_ce) / sizeof(const char *);
+int	tokens_fe_size = sizeof(tokens_fe) / sizeof(const char *);
+#endif
